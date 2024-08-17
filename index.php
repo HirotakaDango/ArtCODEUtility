@@ -98,18 +98,40 @@ function process_images($api_url, $base_url, $save_dir, $rename_files) {
 // Read base URL from config.txt
 function get_base_url() {
   $config_file = __DIR__ . DIRECTORY_SEPARATOR . 'config.txt';
+  
+  // Check if config.txt exists
   if (!file_exists($config_file)) {
-    echo "Error: config.txt not found.\n";
-    exit(1);
-  }
+    // Create config.txt and prompt for URL
+    $handle = fopen($config_file, 'w');
+    if ($handle === false) {
+      echo "Error: Unable to create config.txt.\n";
+      exit(1);
+    }
 
-  $base_url = trim(file_get_contents($config_file));
-  if (empty($base_url)) {
-    echo "Error: Base URL is empty in config.txt.\n";
-    exit(1);
-  }
+    // Prompt for a valid URL
+    do {
+      echo "config.txt not found. Please enter the base URL (must use http:// or https://): ";
+      $base_url = trim(fgets(STDIN));
 
-  return $base_url;
+      // Validate URL
+      if (preg_match('/^https?:\/\/[^\s\/$.?#].[^\s]*$/i', $base_url)) {
+        fwrite($handle, $base_url);
+        fclose($handle);
+        break;
+      } else {
+        echo "Invalid URL. Please ensure it starts with http:// or https://.\n";
+      }
+    } while (true);
+    
+    return $base_url;
+  } else {
+    $base_url = trim(file_get_contents($config_file));
+    if (empty($base_url)) {
+      echo "Error: Base URL is empty in config.txt.\n";
+      exit(1);
+    }
+    return $base_url;
+  }
 }
 
 // Main execution
