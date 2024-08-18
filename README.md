@@ -14,7 +14,7 @@
 - Command-line access to run PHP scripts
 - Access to an API endpoint providing image URLs
 
-## Installation
+## shellation
 
 1. **Clone the Repository**:
    ```bash
@@ -28,7 +28,7 @@
 
 3. **Run the Script**:
    ```bash
-   php install.php <artworkid>
+   php shell.php <artworkid>
    ```
 
    Replace `<artworkid>` with the specific ID for the artwork you want to download.
