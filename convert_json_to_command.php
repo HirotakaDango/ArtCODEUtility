@@ -19,18 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_PO
 
     // Create folder command if folder path is specified
     if ($folder) {
-      $commands[] = "mkdir -p $folder";
+      $commands[] = 'mkdir -p "' . $folder . '"';
     }
 
     // Base command for main image
-    $base_command = $rename ? "$weburl$image --download --output $folder/1.jpg" : "$weburl$image --download";
+    $base_command = $rename ? "\"$weburl$image\" --download --output \"$folder/1.jpg\"" : "\"$weburl$image\" --download";
     $commands[] = "http get $base_command";
 
     // Add child images with optional renaming
     $counter = 2;
     foreach ($image_child as $child_image) {
-      $output_file = $rename ? "$folder/$counter.jpg" : "";
-      $commands[] = "http get $weburl$child_image --download" . ($rename ? " --output $output_file" : "");
+      $output_file = $rename ? "\"$folder/$counter.jpg\"" : "";
+      $commands[] = "http get \"$weburl$child_image\" --download" . ($rename ? " --output $output_file" : "");
       $counter++;
     }
 
