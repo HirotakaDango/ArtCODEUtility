@@ -209,6 +209,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_PO
         <button type="submit" class="btn btn-success small fw-medium w-100">Download Images</button>
       </form>
 
+      <h3 class="mt-5">HTTPie Installation Instructions:</h3>
+      <p>To execute the generated commands, you need to have HTTPie installed. Here are the instructions to install HTTPie on various operating systems:</p>
+      <ul>
+        <li><strong>Windows:</strong> Open Command Prompt or PowerShell and run:
+          <pre>pip install httpie</pre>
+        </li>
+        <li><strong>Linux:</strong> Open Terminal and run:
+          <pre>sudo apt install httpie</pre>
+          <em>or</em>
+          <pre>pip install httpie</pre>
+        </li>
+        <li><strong>macOS:</strong> Open Terminal and run:
+          <pre>brew install httpie</pre>
+          <em>or</em>
+          <pre>pip install httpie</pre>
+        </li>
+      </ul>
+      
       <div id="output" class="mt-4"></div>
     </div>
 
