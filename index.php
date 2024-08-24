@@ -160,7 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['artworkId'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArtCODEUtility</title>
-    <link rel="icon" type="image/png" href="<?php include('config.txt'); ?>/icon/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
       #output {
@@ -178,20 +177,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['artworkId'])) {
         <h1 class="fw-bold text-center">Set Base URL</h1>
         <form method="post">
           <label class="form-label mt-3" for="baseUrl">Base URL (must use http or https):</label>
-          <input class="form-control w-100" type="text" id="baseUrl" name="baseUrl" required>
+          <input class="form-control w-100 rounded border-0 bg-body-tertiary" type="text" id="baseUrl" name="baseUrl" required>
           <button type="submit" class="btn btn-primary mt-3">Set URL</button>
         </form>
       <?php else: ?>
         <h1 class="fw-bold text-center">ArtCODEUtility</h1>
         <form id="downloadForm">
           <label class="form-label mt-3" for="artworkId">Artwork ID:</label>
-          <input class="form-control w-100" type="number" id="artworkId" name="artworkId" required>
+          <input class="form-control w-100 rounded border-0 bg-body-tertiary" type="number" id="artworkId" name="artworkId" required>
 
           <label class="form-label mt-3" for="saveDir">Save Directory:</label>
-          <input class="form-control w-100" type="text" id="saveDir" name="saveDir" required>
+          <input class="form-control w-100 rounded border-0 bg-body-tertiary" type="text" id="saveDir" name="saveDir" required>
 
           <label class="form-label mt-3" for="renameFiles">Rename files?</label>
-          <select class="form-select w-100" id="renameFiles" name="renameFiles">
+          <select class="form-select w-100 rounded border-0 bg-body-tertiary" id="renameFiles" name="renameFiles">
             <option value="n">No</option>
             <option value="y">Yes</option>
           </select>
