@@ -30,12 +30,32 @@ function rename_file($file_path, $order) {
   }
 }
 
+// Function to create a ZIP file from a folder
+function create_zip($folder, $zip_name) {
+  $zip = new ZipArchive();
+  if ($zip->open($zip_name, ZipArchive::CREATE) !== TRUE) {
+    return false;
+  }
+
+  $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folder));
+  foreach ($files as $file) {
+    if (!$file->isDir()) {
+      $file_path = $file->getRealPath();
+      $relative_path = substr($file_path, strlen($folder) + 1);
+      $zip->addFile($file_path, $relative_path);
+    }
+  }
+
+  return $zip->close();
+}
+
 // Handle the form submission for downloading images
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_POST['weburl'])) {
   $json = $_POST['json'];
   $weburl = $_POST['weburl'];
-  $rename = isset($_POST['rename']) ? true : false; // Check if rename is selected
+  $rename_files = isset($_POST['rename']) ? 'y' : 'n'; // Check if rename is selected
   $folder = isset($_POST['folder']) ? $_POST['folder'] : ''; // Get folder path
+  $create_zip = isset($_POST['zip']) ? 'y' : 'n'; // Check if ZIP creation is selected
 
   // Decode JSON input
   $data = json_decode($json, true);
@@ -47,6 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_PO
 
     // Initialize output array
     $output = [];
+    $image_count = 0; // Track the number of images downloaded
+    $total_size = 0; // Track the total size of images downloaded in bytes
+
+    // Define column widths
+    $index_width = 4;
+    $url_width = 50;
+    $size_width = 10;
 
     // Create folder if specified
     if ($folder && !file_exists($folder)) {
@@ -63,32 +90,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_PO
 
     list($success, $size_kb) = download_image($image_url, $save_to);
     if ($success) {
-      $output[] = "Successfully downloaded: <a href='$save_to' target='_blank'>$save_to</a> (Size: " . number_format($size_kb, 2) . " KB)";
-      if ($rename) {
-        $new_file_path = rename_file($save_to, 1);
-        $output[] = "Renamed to: <a href='$new_file_path' target='_blank'>$new_file_path</a>";
+      $total_size += $size_kb * 1024;
+      $image_count++;
+      $output[] = sprintf(
+        "%-" . $index_width . "d  %-".$url_width."s\n      successfully downloaded <a href='%s' target='_blank'>%s</a> (Size: %".$size_width."s KB)",
+        $image_count,
+        $image_url,
+        $save_to,
+        $save_to,
+        number_format($size_kb, 2)
+      );
+
+      if ($rename_files === 'y') {
+        $new_file_path = rename_file($save_to, $image_count);
+        $output[] = sprintf(
+          "      renamed to <a href='%s' target='_blank'>%s</a>",
+          $new_file_path,
+          $new_file_path
+        );
       }
     } else {
-      $output[] = "Failed to download: $image_url";
+      $output[] = sprintf(
+        "%-" . $index_width . "d  %-".$url_width."s\n      failed to download",
+        $image_count + 1,
+        $image_url
+      );
     }
 
     // Download and process child images
-    $counter = 2;
-    foreach ($image_child as $child_image) {
+    foreach ($image_child as $index => $child_image) {
       $child_url = $weburl . $child_image;
       $child_filename = basename($child_url);
       $save_to = $folder ? $folder . DIRECTORY_SEPARATOR . $child_filename : $child_filename;
 
       list($success, $size_kb) = download_image($child_url, $save_to);
       if ($success) {
-        $output[] = "Successfully downloaded: <a href='$save_to' target='_blank'>$save_to</a> (Size: " . number_format($size_kb, 2) . " KB)";
-        if ($rename) {
-          $new_file_path = rename_file($save_to, $counter);
-          $output[] = "Renamed to: <a href='$new_file_path' target='_blank'>$new_file_path</a>";
+        $total_size += $size_kb * 1024;
+        $image_count++;
+        $output[] = sprintf(
+          "\n%-" . $index_width . "d  %-".$url_width."s\n      successfully downloaded <a href='%s' target='_blank'>%s</a> (Size: %".$size_width."s KB)",
+          $image_count,
+          $child_url,
+          $save_to,
+          $save_to,
+          number_format($size_kb, 2)
+        );
+
+        if ($rename_files === 'y') {
+          $new_file_path = rename_file($save_to, $image_count);
+          $output[] = sprintf(
+            "      renamed to <a href='%s' target='_blank'>%s</a>",
+            $new_file_path,
+            $new_file_path
+          );
         }
-        $counter++;
       } else {
-        $output[] = "Failed to download: $child_url";
+        $output[] = sprintf(
+          "%-" . $index_width . "d  %-".$url_width."s\n      failed to download",
+          $image_count + 1,
+          $child_url
+        );
+      }
+    }
+
+    // Summary of the download
+    $output[] = sprintf(
+      "<br>Total images downloaded: %d<br>Total size: %.2f KB",
+      $image_count,
+      $total_size / 1024
+    );
+
+    // Create ZIP file if selected
+    if ($create_zip === 'y' && $folder) {
+      $zip_name = $folder . '.zip';
+      if (create_zip($folder, $zip_name)) {
+        $output[] = "<br><a href='$zip_name' download>Download $zip_name</a>";
+      } else {
+        $output[] = "<br><span style='color: red;'>Failed to create ZIP file.</span>";
       }
     }
 
@@ -127,7 +205,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['json']) && isset($_PO
         <input type="text" class="mb-2 form-control w-100 rounded border-0 bg-body-tertiary" name="weburl" placeholder="Enter base URL (e.g., http://example.com)" required>
         <label><input type="checkbox" name="rename" class="mb-3 form-check-input"> Rename files sequentially (1.jpg, 2.jpg, etc.)</label>
         <input type="text" class="mb-2 form-control w-100 rounded border-0 bg-body-tertiary" name="folder" placeholder="Enter folder path (optional)">
-        <button type="submit" class="btn btn-success small fw-medium w-100 mt-3">Download Images</button>
+        <label><input type="checkbox" name="zip" class="mb-3 form-check-input"> Create ZIP file</label>
+        <button type="submit" class="btn btn-success small fw-medium w-100">Download Images</button>
       </form>
 
       <div id="output" class="mt-4"></div>
